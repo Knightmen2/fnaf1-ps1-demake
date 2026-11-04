@@ -26,9 +26,12 @@
 - Альтернатива Linux: `android_host/` + Buildozer (`buildozer.spec`).
 
 ### GitHub
-- Локальный clean commit: `Downloads\fnaf1-ps1-github-clean` (`4c9cb90`, 218 файлов).
-- `gh auth login` ещё не завершён пользователем (device flow) → **push отложен** до авторизации.
-- После логина: `gh repo create fnaf1-ps1-demake --public --source=... --push`.
+- Локальный clean repo: `Downloads\fnaf1-ps1-github-clean`
+  - `4c9cb90` Initial (218 файлов)
+  - `84961e7` packaging + `pc_host` / `android_host`
+- `gh auth login` (device flow) **не завершён** → push отложен.
+- Скрипт: `PUSH_GITHUB.ps1` в staging и в `fnaf_ps1_ready/`.
+- На «продолжай» после логина: `gh repo create fnaf1-ps1-demake --public --source=. --push`.
 
 ### Документы
 - `PACKAGING.md` — карта артефактов.
