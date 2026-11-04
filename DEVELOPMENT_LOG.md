@@ -4,6 +4,38 @@
 
 ---
 
+## 2026-11-04 — Упаковка релизов: EXE / APK / Original / GitHub
+
+### Папки в Downloads
+| Папка | Что внутри | Управление | Лимиты PS1 |
+|-------|------------|------------|------------|
+| `OriginalFnaf1Ps1` | `fnaf1.cue`+`bin`, KEYBOARD, README | DuckStation pad/KB | **да** (реальный demake) |
+| `Fnaf1PS1Exe` | `Fnaf1PS1.exe` + `images/` + `music/` + `main.py` | **мышь как оригинал FNAF** | **нет** (full-res) |
+| `FNAFPS1APK` | `Fnaf1PS1-debug.apk` + Android Gradle + `www/` touch HUD | **дубль сенсорных кнопок** | **нет** |
+| `fnaf1-ps1-github-clean` | чистый open-source tree (src/include/ps1_assets/CMake…) | — | — |
+
+### EXE (`pc_host/main.py` → PyInstaller)
+- Мышь к краям экрана = pan офиса; клик двери; hold света; низ = CAMERAS.
+- Ассеты рядом с exe (junction/copy `fnaf_files_for_py`), без 256 TPage / 2MB RAM.
+- Сборка: `pc_host/build_exe.ps1` или уже готовый `%USERPROFILE%\Downloads\Fnaf1PS1Exe\Fnaf1PS1.exe`.
+
+### APK (WebView + HTML5 canvas)
+- `FNAFPS1APK/android` — Gradle 8.2 / AGP 8.2.2 / minSdk 24 / landscape.
+- Touch HUD: LOOK L/R, DOOR L/R, LIGHT L/R, CAMERAS, NEW/CONTINUE.
+- APK: `FNAFPS1APK\Fnaf1PS1-debug.apk` (~20 МБ, 14 full-res PNG).
+- Альтернатива Linux: `android_host/` + Buildozer (`buildozer.spec`).
+
+### GitHub
+- Локальный clean commit: `Downloads\fnaf1-ps1-github-clean` (`4c9cb90`, 218 файлов).
+- `gh auth login` ещё не завершён пользователем (device flow) → **push отложен** до авторизации.
+- После логина: `gh repo create fnaf1-ps1-demake --public --source=... --push`.
+
+### Документы
+- `PACKAGING.md` — карта артефактов.
+- README в каждой Downloads-папке.
+
+---
+
 ## 2026-11-04 — Разные фото камер (запись 19.10.19)
 
 Почему все cams были одинаковые: анти-0FPS фикс форсил только embed `cam0`.
