@@ -4,6 +4,23 @@
 
 ---
 
+## 2026-11-04 — FIX: планшет + оригинальное управление EXE/APK
+
+### Баг
+В ПК-версии «планшет» был почти невидим: UV `UI_MON_OPEN` = 48×5 тёмных пикселей + клик по крошечной зоне. На записи пользователя полоски камер нет.
+
+### Фикс (ISO/OriginalFnaf1Ps1 не трогались)
+| | PC EXE | APK |
+|--|--------|-----|
+| Планшет | видимый `mon_open.png` (crush от `420.png`) снизу + подпись CAMERAS | большой тап **CAMERAS / TABLET** + canvas-strip |
+| Открытие | **hover** полоски как в `fnaf1.py` (`mon_open` / `monik`) | **tap** (мобильный оригинал) |
+| Двери/свет | клик верх панели / hold низ панели | side pads DOOR/LIGHT + LOOK |
+| Ассет | `ps1_assets/graphics/mon_open.png`, `cam_nav.png` | то же в APK assets |
+
+Пересобраны `Fnaf1PS1.exe` и `Fnaf1PS1-debug.apk`. README в обеих папках обновлены.
+
+---
+
 ## 2026-11-04 — EXE/APK: возврат жмыхнутых PS1-ассетов + VHS + Ps1Version
 
 ### Важно
