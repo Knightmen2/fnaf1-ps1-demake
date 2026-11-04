@@ -4,6 +4,27 @@
 
 ---
 
+## 2026-11-04 — EXE/APK: возврат жмыхнутых PS1-ассетов + VHS + Ps1Version
+
+### Важно
+`OriginalFnaf1Ps1` / ISO / C-код **не трогались**.
+
+### Что было не так
+EXE/APK брали full-res `fnaf_files_for_py` → «разжмытые» текстуры/звук, серые двери/кнопки вместо `door_L/R` + `ui_atlas`.
+
+### Что сделано
+| Артефакт | Путь | Изменения |
+|----------|------|-----------|
+| EXE | `Downloads\Fnaf1PS1Exe\` | `ps1_assets/` (graphics/audio/fonts/tim), двери+UI atlas, тайминги `constants.h`, меню **Ps1Version**, **VHS** (scanlines+snow+tear) |
+| APK | `Downloads\FNAFPS1APK\Fnaf1PS1-debug.apk` | те же crushed assets, touch HUD, Ps1Version, VHS |
+| GitHub | https://github.com/Knightmen2/fnaf1-ps1-demake | запушен clean open-source tree |
+
+Логическое разрешение по-прежнему 320×240 (как PS1); на ПК только scale×4. Звук — `*_ps1.wav` из пайплайна demake.
+
+Исходники хостов: `pc_host/main.py`, `FNAFPS1APK/www/index.html`.
+
+---
+
 ## 2026-11-04 — Упаковка релизов: EXE / APK / Original / GitHub
 
 ### Папки в Downloads
