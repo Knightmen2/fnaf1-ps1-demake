@@ -131,12 +131,43 @@ void assets_load_anim_atlases(void)
 
 void assets_load_office(OfficeVariant v)
 {
+    /* lit hallway variants live on ISO (see iso.xml OFF58/127/225/227) */
+    static const char *path_l[OFFICE_VARIANT_COUNT] = {
+        0,
+        "\\TIM\\OFF58L.TIM",
+        "\\TIM\\OFF127L.TIM",
+        "\\TIM\\OFF225L.TIM",
+        "\\TIM\\OFF227L.TIM"
+    };
+    static const char *path_r[OFFICE_VARIANT_COUNT] = {
+        0,
+        "\\TIM\\OFF58R.TIM",
+        "\\TIM\\OFF127R.TIM",
+        "\\TIM\\OFF225R.TIM",
+        "\\TIM\\OFF227R.TIM"
+    };
+
+    if (v < 0 || v >= OFFICE_VARIANT_COUNT)
+        v = OFFICE_DARK;
     if ((short)v == s_office)
         return;
     s_menu_pose = -1;
 
-    /* Office lights still embed-only (CD office variants = hang risk historically) */
-    (void)v;
+    if (v == OFFICE_DARK) {
+        assets_upload_tim(TEX_OFFICE_L, (uint32_t *)tim_office_39_L, 640, 0, 640, 248);
+        assets_upload_tim(TEX_OFFICE_R, (uint32_t *)tim_office_39_R, 768, 0, 896, 248);
+        s_office = OFFICE_DARK;
+        return;
+    }
+
+    /* Load BOTH halves from CD (call only from game_update / light toggle — never draw) */
+    if (try_cd_tim(TEX_OFFICE_L, path_l[v], 640, 0, 640, 248) &&
+        try_cd_tim(TEX_OFFICE_R, path_r[v], 768, 0, 896, 248)) {
+        s_office = (short)v;
+        return;
+    }
+
+    /* CD miss → stay on dark embed so we never wedge */
     assets_upload_tim(TEX_OFFICE_L, (uint32_t *)tim_office_39_L, 640, 0, 640, 248);
     assets_upload_tim(TEX_OFFICE_R, (uint32_t *)tim_office_39_R, 768, 0, 896, 248);
     s_office = OFFICE_DARK;

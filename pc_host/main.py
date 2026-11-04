@@ -1,10 +1,8 @@
 #!/usr/bin/env python3
-"""FNAF1 PS1 demake — PC host (original FNAF mouse controls).
+"""FNAF1 PS1 demake — PC host.
 
-Crushed ps1_assets. Controls match fnaf1.py:
-- mouse to edges = pan
-- click door half of wall panels / hold light half
-- HOVER bottom mon_open strip = flip tablet (not click)
+SPACE = flip tablet (reliable). Mouse look / doors / hold lights.
+Hallway lights swap office_58/127/225/227 crushed textures (same as PS1 ISO).
 """
 from __future__ import annotations
 
@@ -22,7 +20,7 @@ CANDIDATES = [
     Path(__file__).resolve().parent.parent / "fnaf_ps1_ready" / "ps1_assets",
 ]
 ASSETS = next((p for p in CANDIDATES if p.exists()), CANDIDATES[0])
-GFX, AUD, FNT, TIM = ASSETS / "graphics", ASSETS / "audio", ASSETS / "fonts", ASSETS / "tim"
+GFX, AUD, TIM = ASSETS / "graphics", ASSETS / "audio", ASSETS / "tim"
 
 LW, LH = 320, 240
 SCALE = 4
@@ -39,17 +37,25 @@ FR_WIN_HOLD = 780
 FR_TRANSITION = 180
 FR_POWER = {1: 240, 2: 180, 3: 102, 4: 84, 5: 60}
 
-# Bottom tablet strip (logical) — visible like original 420.png / mon_open
-MON_X, MON_Y, MON_W, MON_H = 60, 212, 200, 24
+MON_X, MON_Y, MON_W, MON_H = 40, 200, 240, 36  # big hit zone
 
 UI_BTNL = [(0, 36), (36, 36), (72, 36), (108, 36)]
 UI_BTNR = [(144, 36), (180, 36), (216, 36), (216, 36)]
 
+# office variants — match Python office_sp / PS1 OFF*
+OFFICE_FILES = {
+    "dark": ("office_39_L.png", "office_39_R.png"),
+    "light_l": ("office_58_L.png", "office_58_R.png"),
+    "light_r": ("office_127_L.png", "office_127_R.png"),
+    "bonnie": ("office_225_L.png", "office_225_R.png"),
+    "chica": ("office_227_L.png", "office_227_R.png"),
+}
+
 
 def load_img(path: Path):
     if not path.exists():
-        s = pygame.Surface((64, 64), pygame.SRCALPHA)
-        s.fill((40, 0, 40, 255))
+        s = pygame.Surface((256, 240), pygame.SRCALPHA)
+        s.fill((30, 0, 30, 255))
         return s.convert_alpha()
     return pygame.image.load(str(path)).convert_alpha()
 
@@ -62,13 +68,6 @@ def load_wav(stem: str):
                 return pygame.mixer.Sound(str(p))
             except pygame.error:
                 pass
-    if AUD.exists():
-        for f in AUD.iterdir():
-            if f.suffix.lower() == ".wav" and stem.lower() in f.stem.lower():
-                try:
-                    return pygame.mixer.Sound(str(f))
-                except pygame.error:
-                    pass
     return None
 
 
@@ -88,24 +87,25 @@ class Game:
         pygame.init()
         pygame.mixer.init(frequency=22050, size=-16, channels=1)
         self.screen = pygame.display.set_mode((WW, WH))
-        pygame.display.set_caption("FNAF1 PS1 Demake — PC (mouse)")
+        pygame.display.set_caption("FNAF1 PS1 — SPACE=tablet | mouse look/doors/lights")
         self.clock = pygame.time.Clock()
-        self.font_sm = pygame.font.SysFont("courier new", 10 * SCALE)
+        self.font_sm = pygame.font.SysFont("courier new", 11 * SCALE, bold=True)
 
         self.ui = load_img(GFX / "ui_atlas.png")
         self.door_l_spr = load_img(GFX / "door_L.png")
         self.door_r_spr = load_img(GFX / "door_R.png")
-        self.office_l = load_img(GFX / "office_39_L.png")
-        self.office_r = load_img(GFX / "office_39_R.png")
+        self.offices = {}
+        for key, (fl, fr) in OFFICE_FILES.items():
+            self.offices[key] = (load_img(GFX / fl), load_img(GFX / fr))
+        self.office_l, self.office_r = self.offices["dark"]
+        self.office_key = "dark"
+
         self.menu_img = load_img(TIM / "menu.png") if (TIM / "menu.png").exists() else self.office_l
         self.loading_img = load_img(TIM / "loading.png") if (TIM / "loading.png").exists() else self.office_r
-        # Original-style visible tablet flip strip
         self.mon_open = load_img(GFX / "mon_open.png")
         if self.mon_open.get_width() < 10:
-            self.mon_open = pygame.Surface((MON_W, MON_H), pygame.SRCALPHA)
-            self.mon_open.fill((180, 180, 180, 220))
-        else:
-            self.mon_open = pygame.transform.scale(self.mon_open, (MON_W, MON_H))
+            self.mon_open = pygame.Surface((MON_W, 16), pygame.SRCALPHA)
+            self.mon_open.fill((200, 200, 200, 230))
         self.cam_nav = load_img(GFX / "cam_nav.png") if (GFX / "cam_nav.png").exists() else None
         cams = [
             "cam_00_19.png", "cam_01_48.png", "cam_02_66.png", "cam_03_337.png",
@@ -123,7 +123,7 @@ class Game:
             "fan": load_wav("buzz_fan_florescent2"),
             "scream": load_wav("xscream"),
             "menu": load_wav("darkness_music"),
-            "error": load_wav("error"),
+            "scare": load_wav("windowscare"),
         }
         self.fan_ch = self.menu_ch = None
 
@@ -141,8 +141,7 @@ class Game:
         self.light_l = self.light_r = False
         self.cams_open = False
         self.cam = 0
-        self.flip_t = 0
-        self.static_t = 0
+        self.flip_t = self.static_t = 0
         self.hour_t = FR_HOUR
         self.power_t = self.power_int
         self.bonnie_wake = FR_BONNIE_WAKE
@@ -150,12 +149,11 @@ class Game:
         self.bonnie_step = self.chica_step = 0
         self.bonnie_wait = self.chica_wait = 0
         self.bonnie_door = self.chica_door = False
+        self.bonnie_seen = self.chica_seen = False
         self.lose_t = self.win_t = self.trans_t = 0
         self.noise_frame = 0
         self.rng = random.randint(1, 0x7FFFFFFF)
         self.vhs_surf = pygame.Surface((LW, LH), pygame.SRCALPHA)
-        # original monik: 0 = ready to trigger on hover enter
-        self.monik = 0
 
     def play(self, k):
         s = self.sfx.get(k)
@@ -166,6 +164,21 @@ class Game:
         u = 1 + int(self.door_l) + int(self.door_r) + int(self.light_l) + int(self.light_r) + int(self.cams_open)
         self.usage = min(5, u)
         self.power_int = FR_POWER.get(self.usage, 240)
+
+    def sync_office(self):
+        if self.light_l and self.bonnie_door:
+            key = "bonnie"
+        elif self.light_r and self.chica_door:
+            key = "chica"
+        elif self.light_l:
+            key = "light_l"
+        elif self.light_r:
+            key = "light_r"
+        else:
+            key = "dark"
+        if key != self.office_key:
+            self.office_key = key
+            self.office_l, self.office_r = self.offices[key]
 
     def start_night(self, n=None):
         if n is not None:
@@ -185,18 +198,18 @@ class Game:
         self.scroll = 96
         self.bonnie_step = self.chica_step = 0
         self.bonnie_door = self.chica_door = False
+        self.bonnie_seen = self.chica_seen = False
         self.bonnie_wake = FR_BONNIE_WAKE
         self.chica_wake = FR_CHICA_WAKE
         self.bonnie_wait = self.chica_wait = 0
         self.flip_t = self.static_t = 0
-        self.monik = 0
         self.recalc()
         self.power_t = self.power_int
         self.hour_t = FR_HOUR
+        self.sync_office()
 
     def enter_game(self):
         self.mode = "game"
-        self.monik = 0
         if self.sfx["fan"]:
             self.fan_ch = self.sfx["fan"].play(loops=-1)
 
@@ -206,30 +219,18 @@ class Game:
             self.fan_ch = None
 
     def toggle_cams(self):
+        """SPACE / tablet strip — always works."""
+        if self.mode not in ("game", "cameras"):
+            return
         self.cams_open = not self.cams_open
         self.mode = "cameras" if self.cams_open else "game"
         self.flip_t = FR_MONITOR_FLIP
         self.play("put")
         if self.cams_open:
-            if self.light_l or self.light_r:
-                self.light_l = self.light_r = False
+            self.light_l = self.light_r = False
             self.static_t = 20
+            self.sync_office()
         self.recalc()
-
-    def mon_rect_logical(self):
-        return pygame.Rect(MON_X, MON_Y, MON_W, MON_H)
-
-    def update_mon_hover(self, lx, ly):
-        """Original: hover mon_open strip toggles cameras once until mouse leaves."""
-        if self.mode not in ("game", "cameras"):
-            return
-        hit = self.mon_rect_logical().collidepoint(lx, ly)
-        if not hit:
-            self.monik = 0
-            return
-        if self.monik == 0:
-            self.toggle_cams()
-            self.monik = 1
 
     def update(self):
         self.noise_frame = (self.noise_frame + 1) & 255
@@ -265,12 +266,8 @@ class Game:
         if self.static_t > 0:
             self.static_t -= 1
 
-        # mouse look + mon_open hover (original)
-        mx, my = pygame.mouse.get_pos()
-        lx, ly = mx // SCALE, my // SCALE
-        self.update_mon_hover(lx, ly)
-
         if self.mode == "game" and not self.cams_open:
+            mx, _ = pygame.mouse.get_pos()
             if mx < WW * 0.2:
                 self.scroll = max(0, self.scroll - 5)
             elif mx > WW * 0.8:
@@ -342,35 +339,31 @@ class Game:
                     self.stop_fan()
                     self.play("scream")
 
+        self.sync_office()
+
     def draw_vhs(self, target):
         self.vhs_surf.fill((0, 0, 0, 0))
         r = self.rng
         for y in range(self.noise_frame & 1, LH, 2):
-            pygame.draw.line(self.vhs_surf, (0, 0, 0, 55), (0, y), (LW, y))
-        for y in range(self.noise_frame & 3, LH, 8):
+            pygame.draw.line(self.vhs_surf, (0, 0, 0, 50), (0, y), (LW, y))
+        for _ in range(70):
             r = (r * 1664525 + 1013904223) & 0xFFFFFFFF
-            if (r & 15) == 0:
-                pygame.draw.line(self.vhs_surf, (255, 255, 255, 22), (0, y), (LW, y))
-        for _ in range(90):
-            r = (r * 1664525 + 1013904223) & 0xFFFFFFFF
-            self.vhs_surf.set_at((r % LW, (r >> 8) % LH), (80 + (r & 63),) * 3 + (40 + (r & 40),))
-        tear = (self.noise_frame * 3) % LH
-        pygame.draw.rect(self.vhs_surf, (255, 255, 255, 16), (0, tear, LW, 2))
+            self.vhs_surf.set_at((r % LW, (r >> 8) % LH), (90, 90, 90, 50))
         target.blit(pygame.transform.scale(self.vhs_surf, (WW, WH)), (0, 0))
 
     def draw_text(self, text, x, y, color=(255, 255, 255)):
         self.screen.blit(self.font_sm.render(text, True, color), (x * SCALE, y * SCALE))
 
     def draw_tablet_strip(self):
-        """Always-visible mon_open bar (original bottom flip zone)."""
-        # slight pulse so it's impossible to miss
-        pulse = 200 + (self.noise_frame % 40)
-        bg = pygame.Surface((MON_W * SCALE, MON_H * SCALE), pygame.SRCALPHA)
-        bg.fill((30, 30, 30, 200))
-        self.screen.blit(bg, (MON_X * SCALE, MON_Y * SCALE))
-        blit_scaled(self.screen, self.mon_open, MON_X, MON_Y)
-        tip = "CAMERAS" if not self.cams_open else "CLOSE"
-        self.draw_text(tip, MON_X + 70, MON_Y + 6, (pulse, pulse, pulse))
+        # opaque bright bar — impossible to miss
+        bar = pygame.Surface((MON_W * SCALE, MON_H * SCALE))
+        bar.fill((55, 55, 55))
+        pygame.draw.rect(bar, (220, 220, 220), bar.get_rect(), 3 * SCALE)
+        self.screen.blit(bar, (MON_X * SCALE, MON_Y * SCALE))
+        mo = pygame.transform.scale(self.mon_open, (MON_W * SCALE, 16 * SCALE))
+        self.screen.blit(mo, (MON_X * SCALE, (MON_Y + 4) * SCALE))
+        label = "SPACE / CLICK = CLOSE CAMS" if self.cams_open else "SPACE / CLICK = OPEN TABLET"
+        self.draw_text(label, MON_X + 18, MON_Y + 12, (255, 255, 100))
 
     def draw(self):
         s = self.screen
@@ -395,10 +388,10 @@ class Game:
                     ov.fill((40, 40, 40, 110))
                     s.blit(ov, (0, 0))
                 if self.cam_nav:
-                    blit_scaled(s, pygame.transform.scale(self.cam_nav, (96, 96)), 200, 120)
+                    blit_scaled(s, pygame.transform.scale(self.cam_nav, (96, 96)), 200, 110)
                 for i in range(11):
                     lx = 40 + (i % 6) * 24
-                    ly = 168 + (i // 6) * 16
+                    ly = 160 + (i // 6) * 16
                     v0 = 106 if i == self.cam else 90
                     blit_scaled(s, sub(self.ui, i * 22, v0, 21, 14), lx, ly)
                 self.draw_text(f"CAM {self.cam + 1:02d}", 40, 10, (255, 40, 40))
@@ -416,19 +409,11 @@ class Game:
                 blit_scaled(s, sub(self.ui, bu, bv, 18, 48), 10 - sc, 90)
                 bu, bv = UI_BTNR[ri]
                 blit_scaled(s, sub(self.ui, bu, bv, 18, 48), 488 - sc, 90)
-                if self.light_l and self.bonnie_door:
-                    blit_scaled(s, sub(self.bonnie, 0, 192, 64, 64), 40 - sc, 80)
-                if self.light_r and self.chica_door:
-                    blit_scaled(s, sub(self.chica, 0, 192, 64, 64), 420 - sc, 80)
 
             self.draw_tablet_strip()
             am = 12 if self.hour == 0 else self.hour
             self.draw_text(f"PWR {max(0, self.power)}%  {am} AM  N{self.night}  U{self.usage}", 8, 8)
-            pygame.draw.rect(s, (16, 16, 16), (8 * SCALE, 228 * SCALE, 52 * SCALE, 6 * SCALE))
-            pygame.draw.rect(
-                s, (180, 180, 180),
-                (9 * SCALE, 229 * SCALE, (10 + (self.usage - 1) * 8) * SCALE, 4 * SCALE),
-            )
+            self.draw_text("[SPACE]=tablet  hold light buttons", 8, 20, (180, 180, 180))
             if self.flip_t > 0:
                 h = min(LH, self.flip_t * 12)
                 pygame.draw.rect(s, (8, 8, 8), (0, 0, WW, h * SCALE))
@@ -456,49 +441,74 @@ class Game:
                     else:
                         self.show_ps1_info = True
             return
-        if self.mode == "cameras":
+        if self.mode not in ("game", "cameras"):
+            return
+        # tablet strip click
+        if MON_X <= lx <= MON_X + MON_W and MON_Y <= ly <= MON_Y + MON_H:
+            self.toggle_cams()
+            return
+        if self.cams_open:
             for i in range(11):
                 bx = 40 + (i % 6) * 24
-                by = 168 + (i // 6) * 16
+                by = 160 + (i // 6) * 16
                 if bx <= lx <= bx + 21 and by <= ly <= by + 14:
                     self.cam = i
                     self.static_t = 12
                     self.play("blip")
             return
-        if self.mode != "game":
-            return
-        # door/light panels (office space) — original: upper=door click, lower=light hold handled separately
         ox = lx + self.scroll
-        # left panel
-        if 10 <= ox <= 28 and 90 <= ly <= 114:
+        # door = upper panel, light TOGGLE on lower (also hold works)
+        if 8 <= ox <= 30 and 88 <= ly <= 114:
             self.door_l = not self.door_l
             self.play("door")
             self.recalc()
             return
-        if 488 <= ox <= 506 and 90 <= ly <= 114:
+        if 8 <= ox <= 30 and 114 <= ly <= 140:
+            self.light_l = not self.light_l
+            if self.light_l:
+                self.light_r = False
+                if self.bonnie_door and not self.bonnie_seen:
+                    self.bonnie_seen = True
+                    self.play("scare")
+            self.recalc()
+            self.sync_office()
+            return
+        if 486 <= ox <= 508 and 88 <= ly <= 114:
             self.door_r = not self.door_r
             self.play("door")
             self.recalc()
             return
+        if 486 <= ox <= 508 and 114 <= ly <= 140:
+            self.light_r = not self.light_r
+            if self.light_r:
+                self.light_l = False
+                if self.chica_door and not self.chica_seen:
+                    self.chica_seen = True
+                    self.play("scare")
+            self.recalc()
+            self.sync_office()
+            return
 
     def update_light_hold(self):
+        """Original hold: while mouse held on light half, keep light on."""
         if self.mode != "game" or self.cams_open:
-            if self.light_l or self.light_r:
-                self.light_l = self.light_r = False
-                self.recalc()
             return
-        pressed = pygame.mouse.get_pressed()[0]
+        if not pygame.mouse.get_pressed()[0]:
+            return
         lx, ly = pygame.mouse.get_pos()[0] // SCALE, pygame.mouse.get_pos()[1] // SCALE
         ox = lx + self.scroll
-        # lower half of panels = lights (hold like original)
-        want_l = pressed and 10 <= ox <= 28 and 114 <= ly <= 138
-        want_r = pressed and 488 <= ox <= 506 and 114 <= ly <= 138
-        if want_l != self.light_l or want_r != self.light_r:
-            self.light_l = want_l
-            self.light_r = want_r
-            if want_l and want_r:
+        if 8 <= ox <= 30 and 114 <= ly <= 140:
+            if not self.light_l:
+                self.light_l = True
                 self.light_r = False
-            self.recalc()
+                self.recalc()
+                self.sync_office()
+        elif 486 <= ox <= 508 and 114 <= ly <= 140:
+            if not self.light_r:
+                self.light_r = True
+                self.light_l = False
+                self.recalc()
+                self.sync_office()
 
     def run(self):
         while True:
@@ -514,6 +524,8 @@ class Game:
                         else:
                             pygame.quit()
                             return
+                    if e.key == pygame.K_SPACE:
+                        self.toggle_cams()
                     if self.mode == "menu":
                         if e.key in (pygame.K_UP, pygame.K_w):
                             self.menu_sel = (self.menu_sel - 1) % 3
@@ -521,7 +533,7 @@ class Game:
                         if e.key in (pygame.K_DOWN, pygame.K_s):
                             self.menu_sel = (self.menu_sel + 1) % 3
                             self.play("blip")
-                        if e.key in (pygame.K_RETURN, pygame.K_SPACE):
+                        if e.key in (pygame.K_RETURN,):
                             self.play("blip")
                             if self.menu_sel == 0:
                                 self.start_night(1)

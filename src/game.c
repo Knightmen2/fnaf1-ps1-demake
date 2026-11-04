@@ -185,6 +185,20 @@ static void tick_door_anim(void)
     }
 }
 
+static void sync_office_tex(void)
+{
+    OfficeVariant v = OFFICE_DARK;
+    if (g_game.office.light_l && g_game.bonnie.at_door)
+        v = OFFICE_BONNIE;
+    else if (g_game.office.light_r && g_game.chica.at_door)
+        v = OFFICE_CHICA;
+    else if (g_game.office.light_l)
+        v = OFFICE_LIGHT_L;
+    else if (g_game.office.light_r)
+        v = OFFICE_LIGHT_R;
+    assets_load_office(v);
+}
+
 static void set_light_l(int on)
 {
     if (!g_game.office.light_allowed)
@@ -199,6 +213,8 @@ static void set_light_l(int on)
         g_game.office.light_l = 0;
     }
     recalc_usage();
+    if (g_game.mode == MODE_GAME)
+        sync_office_tex();
 }
 
 static void set_light_r(int on)
@@ -215,6 +231,8 @@ static void set_light_r(int on)
         g_game.office.light_r = 0;
     }
     recalc_usage();
+    if (g_game.mode == MODE_GAME)
+        sync_office_tex();
 }
 
 static void flip_monitor(void)
@@ -557,6 +575,10 @@ void game_update(void)
                   g_game.office.door_l, g_game.office.door_r,
                   g_game.power, g_game.night, (int)g_game.mode,
                   g_game.cams.open, g_game.cams.cur, &g_game.rng);
+
+        /* Hallway light textures (OFF58/127/225/227) — after AI so door scare poses update */
+        if (g_game.mode == MODE_GAME)
+            sync_office_tex();
 
         /* Mark static flash on AI step edges could be hooked here */
         tick_screamers();

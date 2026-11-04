@@ -653,3 +653,19 @@ DOOR_L/R  (640/704,0) 64x240
 | windowscare.wav | windowscare_ps1.wav | 22050 | 16 | 1 |
 | XSCREAM.wav | xscream_ps1.wav | 22050 | 16 | 1 |
 | XSCREAM2.wav | xscream2_ps1.wav | 11025 | 16 | 1 |
+
+## 2026-11-04 — FIX планшет SPACE + подсветка коридоров (все 3 версии)
+
+### Планшет (EXE)
+- Было: невидимая/нерабочая зона mon_open.
+- Стало: **SPACE** открывает/закрывает камеры + большой кликабельный бар снизу с подписью.
+
+### Подсветка коридоров (баг во всех версиях)
+| Версия | Причина | Фикс |
+|--------|---------|------|
+| PS1 C | `assets_load_office` игнорировал variant, всегда `office_39` | CD-load `OFF58/127/225/227` из ISO в `game_update` / light toggle (не в draw) |
+| EXE | только office_39 | swap PNG `office_58/127/225/227` при light |
+| APK | то же | `officePair()` в canvas |
+
+Пересобраны: `Fnaf1PS1.exe`, `Fnaf1PS1-debug.apk`, `OriginalFnaf1Ps1/fnaf1.bin` (+ DuckStation запущен).
+

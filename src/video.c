@@ -64,19 +64,6 @@ static void draw_tile(short x, short y, short w, short h, uint8_t r, uint8_t g, 
     setRGB0(t, r, g, b);
 }
 
-static OfficeVariant office_variant_for(const GameState *g)
-{
-    if (g->office.light_l && g->bonnie.at_door)
-        return OFFICE_BONNIE;
-    if (g->office.light_r && g->chica.at_door)
-        return OFFICE_CHICA;
-    if (g->office.light_l)
-        return OFFICE_LIGHT_L;
-    if (g->office.light_r)
-        return OFFICE_LIGHT_R;
-    return OFFICE_DARK;
-}
-
 /* Cheap fan motion: 3 blades around desk fan spot in office space */
 static void draw_fan(const GameState *g)
 {
@@ -109,7 +96,7 @@ static void draw_office(const GameState *g)
     short btn_l = UI_BTNL_0_U, btn_lv = UI_BTNL_0_V;
     short btn_r = UI_BTNR_0_U, btn_rv = UI_BTNR_0_V;
 
-    assets_load_office(office_variant_for(g));
+    /* Office TIM swap happens in game_update (assets_sync_office) — never LoadImage here */
     draw_sprt(TEX_OFFICE_L, (short)(0 - scroll), 0, 0, 0, 256, 240, 4);
     draw_sprt(TEX_OFFICE_R, (short)(256 - scroll), 0, 0, 0, 256, 240, 4);
 
