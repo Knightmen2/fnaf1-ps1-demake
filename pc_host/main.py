@@ -413,7 +413,7 @@ class Game:
             self.draw_tablet_strip()
             am = 12 if self.hour == 0 else self.hour
             self.draw_text(f"PWR {max(0, self.power)}%  {am} AM  N{self.night}  U{self.usage}", 8, 8)
-            self.draw_text("[SPACE]=tablet  hold light buttons", 8, 20, (180, 180, 180))
+            self.draw_text("[SPACE]=tablet  HOLD light buttons (release=off)", 8, 20, (180, 180, 180))
             if self.flip_t > 0:
                 h = min(LH, self.flip_t * 12)
                 pygame.draw.rect(s, (8, 8, 8), (0, 0, WW, h * SCALE))
@@ -458,57 +458,47 @@ class Game:
             return
         ox = lx + self.scroll
         # door = upper panel, light TOGGLE on lower (also hold works)
+        # Door = upper half of panel (click toggle). Lights = HOLD only (see update_lights).
         if 8 <= ox <= 30 and 88 <= ly <= 114:
             self.door_l = not self.door_l
             self.play("door")
             self.recalc()
-            return
-        if 8 <= ox <= 30 and 114 <= ly <= 140:
-            self.light_l = not self.light_l
-            if self.light_l:
-                self.light_r = False
-                if self.bonnie_door and not self.bonnie_seen:
-                    self.bonnie_seen = True
-                    self.play("scare")
-            self.recalc()
-            self.sync_office()
             return
         if 486 <= ox <= 508 and 88 <= ly <= 114:
             self.door_r = not self.door_r
             self.play("door")
             self.recalc()
             return
-        if 486 <= ox <= 508 and 114 <= ly <= 140:
-            self.light_r = not self.light_r
-            if self.light_r:
-                self.light_l = False
-                if self.chica_door and not self.chica_seen:
-                    self.chica_seen = True
-                    self.play("scare")
+
+    def update_lights(self):
+        """Original FNAF: light ON only while mouse held on lower panel; release = OFF."""
+        if self.mode != "game" or self.cams_open:
+            if self.light_l or self.light_r:
+                self.light_l = self.light_r = False
+                self.recalc()
+                self.sync_office()
+            return
+        pressed = pygame.mouse.get_pressed()[0]
+        lx = pygame.mouse.get_pos()[0] // SCALE
+        ly = pygame.mouse.get_pos()[1] // SCALE
+        ox = lx + self.scroll
+        want_l = bool(pressed and 8 <= ox <= 30 and 114 <= ly <= 140)
+        want_r = bool(pressed and 486 <= ox <= 508 and 114 <= ly <= 140)
+        if want_l and want_r:
+            want_r = False
+        if want_l != self.light_l or want_r != self.light_r:
+            was_off_l = not self.light_l
+            was_off_r = not self.light_r
+            self.light_l = want_l
+            self.light_r = want_r
+            if want_l and was_off_l and self.bonnie_door and not self.bonnie_seen:
+                self.bonnie_seen = True
+                self.play("scare")
+            if want_r and was_off_r and self.chica_door and not self.chica_seen:
+                self.chica_seen = True
+                self.play("scare")
             self.recalc()
             self.sync_office()
-            return
-
-    def update_light_hold(self):
-        """Original hold: while mouse held on light half, keep light on."""
-        if self.mode != "game" or self.cams_open:
-            return
-        if not pygame.mouse.get_pressed()[0]:
-            return
-        lx, ly = pygame.mouse.get_pos()[0] // SCALE, pygame.mouse.get_pos()[1] // SCALE
-        ox = lx + self.scroll
-        if 8 <= ox <= 30 and 114 <= ly <= 140:
-            if not self.light_l:
-                self.light_l = True
-                self.light_r = False
-                self.recalc()
-                self.sync_office()
-        elif 486 <= ox <= 508 and 114 <= ly <= 140:
-            if not self.light_r:
-                self.light_r = True
-                self.light_l = False
-                self.recalc()
-                self.sync_office()
 
     def run(self):
         while True:
@@ -544,7 +534,7 @@ class Game:
                 if e.type == pygame.MOUSEBUTTONDOWN and e.button == 1:
                     self.on_click(e.pos)
 
-            self.update_light_hold()
+            self.update_lights()
             self.update()
             self.draw()
             pygame.display.flip()

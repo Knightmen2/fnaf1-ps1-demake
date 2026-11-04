@@ -669,3 +669,16 @@ DOOR_L/R  (640/704,0) 64x240
 
 Пересобраны: `Fnaf1PS1.exe`, `Fnaf1PS1-debug.apk`, `OriginalFnaf1Ps1/fnaf1.bin` (+ DuckStation запущен).
 
+
+## 2026-11-04 — FIX: кнопки PS1 + свет EXE гаснет
+
+### PS1 (DuckStation)
+- Кнопки дверей/света рисовались серыми `draw_tile` (анти-neon хак).
+- Вернул спрайты из `ui_atlas` (`UI_BTNL_*` / `UI_BTNR_*`) через `draw_sprt`.
+- ISO пересобран → `OriginalFnaf1Ps1`, DuckStation запущен.
+
+### EXE
+- Свет после клика не гас — был toggle + hold без release-off.
+- Как в оригинале: **HOLD** нижнюю кнопку света = вкл, **отпустил** = выкл.
+- Двери по-прежнему клик по верхней половине панели. Планшет = SPACE.
+

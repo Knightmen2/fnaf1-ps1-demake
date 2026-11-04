@@ -122,18 +122,18 @@ static void draw_office(const GameState *g)
         btn_r = UI_BTNR_2_U; btn_rv = UI_BTNR_2_V;
     }
 
-    /* Door/light panels as plain tiles — UI atlas buttons were neon/wrong CLUT */
-    {
+    /* Real door/light panels from ui_atlas (122/124/125/130 style) — not grey cubes */
+    if (g_tex[TEX_UI].loaded) {
+        draw_sprt(TEX_UI, (short)(10 - scroll), 90,
+                  btn_l, btn_lv, UI_BTNL_0_W, UI_BTNL_0_H, 2);
+        draw_sprt(TEX_UI, (short)(488 - scroll), 90,
+                  btn_r, btn_rv, UI_BTNR_0_W, UI_BTNR_0_H, 2);
+    } else {
         uint8_t bl = (uint8_t)(g->office.door_l || g->office.light_l ? 90 : 40);
         uint8_t br = (uint8_t)(g->office.door_r || g->office.light_r ? 90 : 40);
         draw_tile((short)(10 - scroll), 90, 14, 40, bl, bl, bl, 2);
         draw_tile((short)(488 - scroll), 90, 14, 40, br, br, br, 2);
-        if (g->office.light_l)
-            draw_tile((short)(12 - scroll), 94, 10, 8, 200, 200, 160, 1);
-        if (g->office.light_r)
-            draw_tile((short)(490 - scroll), 94, 10, 8, 200, 200, 160, 1);
     }
-    (void)btn_l; (void)btn_lv; (void)btn_r; (void)btn_rv;
 
     draw_tablet_bar();
 
