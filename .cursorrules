@@ -1,0 +1,56 @@
+# FNAF 1 PS1 Demake — Cursor Rules (PSn00bSDK / real PS1 hardware)
+
+You are building a structured FNAF 1 demake for original PlayStation 1 using open-source PSn00bSDK.
+All generated code, assets pipelines, and docs MUST obey these hard constraints.
+
+## Project layout
+- Game target root: `fnaf_ps1_ready/`
+- C sources: `fnaf_ps1_ready/src/`
+- Headers: `fnaf_ps1_ready/include/`
+- Raw inputs: `fnaf_ps1_ready/assets_raw/`
+- Cooked PS1 assets: `fnaf_ps1_ready/ps1_assets/{graphics,audio,fonts}/`
+- Always update `fnaf_ps1_ready/DEVELOPMENT_LOG.md` in Russian after every meaningful change.
+
+## HARDWARE FLOAT BAN
+- NO hardware floats in game logic. No `float`, `double`, or floating literals in runtime gameplay code.
+- Use `int`, `short`, `int16_t`, `int32_t`, or fixed-point via GTE / Q formats (e.g. 16.16).
+- Timers are FRAME-BASED only:
+  - NTSC: 1 second = 60 frames
+  - PAL: 1 second = 50 frames
+- Convert Python `clock.schedule(..., seconds)` to frame countdowns (`frames_left -= 1` each VBlank).
+
+## RAM (2 MB main memory)
+- NO `malloc` / `free` / `realloc` in the game loop or during night gameplay.
+- All rooms, cameras, AI, HUD, and audio slot tables are static globals / BSS / arena allocated once at boot.
+- Prefer packed structs and fixed-size arrays. Cap camera count, animatronic count, and sprite batches at compile-time constants in `constants.h`.
+
+## VRAM (1 MB, 1024x512 framebuffer+textures)
+- Texture page (TPage) max = 256x256 pixels.
+- Wide office pan: split into LEFT/RIGHT sprites ≤ 256x240 each; scroll with D-pad (no mouse).
+- Cameras: 256x240, 8-bit indexed (CLUT).
+- Animatronics: per-character 256x256 8-bit atlases (readable poses + screamers). NEVER crush characters to 8x8 mush.
+- UI + font: dedicated 256x256 atlases. Document every UV rect in DEVELOPMENT_LOG.md.
+
+## SPU AUDIO
+- Target format: VAG (4-bit ADPCM). Pipeline WAV must be mono, preferably 11025 or 22050 Hz, 8/16-bit PCM, ready for `.vag` conversion.
+- Keep SFX short; stream/loop ambience carefully within SPU RAM limits.
+
+## INPUT (PS1 pad)
+- Map office look to D-pad Left/Right.
+- Doors / lights: face buttons or L1/R1 + shoulder scheme documented in `input.c`.
+- Camera flip: Triangle / Select (document binding). No mouse dependencies.
+
+## CODE STYLE
+- Replace Python OOP / globals with lightweight C structs (`GameState`, `Animatronic`, `OfficeState`, `CameraSystem`).
+- Integer RNG only (LCG or similar). No `random.triangular` floats — use integer ranges.
+- PSn00bSDK-friendly includes; keep modules: `main.c`, `game.c`, `ai.c`, `video.c`, `input.c`.
+
+## CONTINUITY RULE ("ПРОДОЛЖАЙ")
+- If generation truncates mid-token, stop and emit exactly:
+  `== КОНТЕКСТ ЗАПОЛНЕН. ЖДУ КОМАНДЫ НА ПРОДОЛЖЕНИЕ ==`
+- On user "продолжай" / "continue", resume from the exact break point without rewriting completed code.
+
+## REFERENCE SOURCE
+- Logic reference: `FNAF-Python-main/FNAF-Python-main/fnaf1.py`
+- Raw media: `fnaf_files_for_py/{images,music,fonts}`
+- Original Python implements Bonnie + Chica AI, Freddy power-out sequence; Foxy is stubbed — demake may add simplified Foxy path AI under VRAM budget.

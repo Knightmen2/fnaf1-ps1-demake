@@ -1,0 +1,53 @@
+<?xml version="1.0" encoding="utf-8"?>
+<iso_project>
+	<track type="data">
+		<identifiers
+			system			="PLAYSTATION"
+			volume			="FNAF1_PS1"
+			volume_set		="FNAF1_PS1"
+			publisher		="HOMEBREW"
+			data_preparer	="PSN00BSDK"
+			application		="PLAYSTATION"
+			copyright		="README.TXT;1"
+		/>
+		<directory_tree>
+			<file name="SYSTEM.CNF" type="data" source="${PROJECT_SOURCE_DIR}/system.cnf" />
+			<file name="FNAF1.EXE"  type="data" source="fnaf1.exe" />
+
+			<dir name="TIM">
+				<file name="CAM00.TIM" type="data" source="${PROJECT_SOURCE_DIR}/ps1_assets/tim/cam_00_19.tim" />
+				<file name="CAM01.TIM" type="data" source="${PROJECT_SOURCE_DIR}/ps1_assets/tim/cam_01_48.tim" />
+				<file name="CAM02.TIM" type="data" source="${PROJECT_SOURCE_DIR}/ps1_assets/tim/cam_02_66.tim" />
+				<file name="CAM03.TIM" type="data" source="${PROJECT_SOURCE_DIR}/ps1_assets/tim/cam_03_337.tim" />
+				<file name="CAM04.TIM" type="data" source="${PROJECT_SOURCE_DIR}/ps1_assets/tim/cam_04_0.tim" />
+				<file name="CAM05.TIM" type="data" source="${PROJECT_SOURCE_DIR}/ps1_assets/tim/cam_05_62.tim" />
+				<file name="CAM06.TIM" type="data" source="${PROJECT_SOURCE_DIR}/ps1_assets/tim/cam_06_67.tim" />
+				<file name="CAM07.TIM" type="data" source="${PROJECT_SOURCE_DIR}/ps1_assets/tim/cam_07_49.tim" />
+				<file name="CAM08.TIM" type="data" source="${PROJECT_SOURCE_DIR}/ps1_assets/tim/cam_08_83.tim" />
+				<file name="CAM09.TIM" type="data" source="${PROJECT_SOURCE_DIR}/ps1_assets/tim/cam_09_42.tim" />
+				<file name="CAM10.TIM" type="data" source="${PROJECT_SOURCE_DIR}/ps1_assets/tim/cam_10_41.tim" />
+				<file name="OFF58L.TIM" type="data" source="${PROJECT_SOURCE_DIR}/ps1_assets/tim/office_58_L.tim" />
+				<file name="OFF58R.TIM" type="data" source="${PROJECT_SOURCE_DIR}/ps1_assets/tim/office_58_R.tim" />
+				<file name="OFF127L.TIM" type="data" source="${PROJECT_SOURCE_DIR}/ps1_assets/tim/office_127_L.tim" />
+				<file name="OFF127R.TIM" type="data" source="${PROJECT_SOURCE_DIR}/ps1_assets/tim/office_127_R.tim" />
+				<file name="OFF225L.TIM" type="data" source="${PROJECT_SOURCE_DIR}/ps1_assets/tim/office_225_L.tim" />
+				<file name="OFF225R.TIM" type="data" source="${PROJECT_SOURCE_DIR}/ps1_assets/tim/office_225_R.tim" />
+				<file name="OFF227L.TIM" type="data" source="${PROJECT_SOURCE_DIR}/ps1_assets/tim/office_227_L.tim" />
+				<file name="OFF227R.TIM" type="data" source="${PROJECT_SOURCE_DIR}/ps1_assets/tim/office_227_R.tim" />
+				<file name="MENU2.TIM" type="data" source="${PROJECT_SOURCE_DIR}/ps1_assets/tim/menu2.tim" />
+				<file name="MENU3.TIM" type="data" source="${PROJECT_SOURCE_DIR}/ps1_assets/tim/menu3.tim" />
+				<file name="MENU4.TIM" type="data" source="${PROJECT_SOURCE_DIR}/ps1_assets/tim/menu4.tim" />
+			</dir>
+
+			<dir name="SND">
+				<file name="MENU.VAG" type="data" source="${PROJECT_SOURCE_DIR}/ps1_assets/vag/darkness_music_short.vag" />
+				<file name="FAN.VAG"  type="data" source="${PROJECT_SOURCE_DIR}/ps1_assets/vag/buzz_fan_florescent2.vag" />
+				<file name="MBOX.VAG" type="data" source="${PROJECT_SOURCE_DIR}/ps1_assets/vag/music_box_short.vag" />
+				<file name="PWR.VAG"  type="data" source="${PROJECT_SOURCE_DIR}/ps1_assets/vag/powerdown_short.vag" />
+				<file name="CHIME.VAG" type="data" source="${PROJECT_SOURCE_DIR}/ps1_assets/vag/chimes_2_short.vag" />
+			</dir>
+
+			<dummy sectors="1024"/>
+		</directory_tree>
+	</track>
+</iso_project>

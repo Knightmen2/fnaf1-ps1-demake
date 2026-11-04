@@ -1,0 +1,32 @@
+# Build / SDK
+build/
+**/__pycache__/
+*.pyc
+*.o
+*.elf
+*.map
+*.exe
+!tools/*.exe
+*.bin
+*.cue
+.ninja_*
+CMakeCache.txt
+CMakeFiles/
+compile_commands.json
+cd_image_*.xml
+incbin_*.s
+
+# Local / junk
+.vscode/
+.idea/
+*.mp4
+*_vid_frames*/
+vid_frames*/
+auto_boot/
+.DS_Store
+Thumbs.db
+
+# Secrets
+.env
+*.pem
+credentials.json
