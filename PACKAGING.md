@@ -1,35 +1,20 @@
-# Упаковка релизов FNAF1 PS1 demake
+# Packaging — FNAF1 PS1 demake
 
-## 1. GitHub (open-source)
+## GitHub (this repo)
 
 https://github.com/Knightmen2/fnaf1-ps1-demake
 
-Локальный clean tree: `%USERPROFILE%\Downloads\fnaf1-ps1-github-clean\`
-(`src/`, `include/`, `ps1_assets/`, CMake, docs, `pc_host/`, `android_host/`).
+Two folders only at repo root (plus docs):
 
-## 2. OriginalFnaf1Ps1 (DuckStation) — не менять хостами
+1. **`original_ps1/`** — open-source PS1 project (build with PSn00bSDK).
+2. **`emulator_play/`** — DuckStation-ready `fnaf1.cue` + `fnaf1.bin`.
 
-`%USERPROFILE%\Downloads\OriginalFnaf1Ps1\`
-- `fnaf1.cue` + `fnaf1.bin` + `KEYBOARD.txt`
-- Реальный PS1 demake с аппаратными лимитами.
+## Local host builds (optional, not on GitHub as binaries)
 
-## 3. Fnaf1PS1Exe (Windows)
+| Package | Path |
+|---------|------|
+| Windows EXE | `%USERPROFILE%\Downloads\Fnaf1PS1Exe\` |
+| Android APK | `%USERPROFILE%\Downloads\FNAFPS1APK\` |
+| Friend ISO twin | `%USERPROFILE%\Downloads\OriginalFnaf1Ps1\` / `friendbetatestfnaf1ps1\` |
 
-`%USERPROFILE%\Downloads\Fnaf1PS1Exe\`
-- `Fnaf1PS1.exe` + **`ps1_assets/`** (жмыхнутые graphics/audio/fonts)
-- Мышь как оригинал FNAF; двери/кнопки из `door_*.png` + `ui_atlas.png`
-- Меню: New Game / Continue / **Ps1Version**
-- **VHS overlay** (только EXE/APK)
-- Scale 320×240 → окно ×4; логика/тайминги как demake
-
-## 4. FNAFPS1APK (Android)
-
-`%USERPROFILE%\Downloads\FNAFPS1APK\`
-- `Fnaf1PS1-debug.apk` + `ps1_assets/` + `android/`
-- Touch HUD (LOOK/DOOR/LIGHT/CAMS) + **Ps1Version** + **VHS**
-- Те же crushed assets, без full-res подмены
-
-## Политика ассетов хостов
-
-EXE/APK = визуал/звук/шрифты demake (`ps1_assets`), не raw Python media.
-Единственные отличия от ISO: масштаб экрана, схема ввода (мышь/тач), VHS-оверлей, пункт меню Ps1Version.
+EXE/APK use crushed `ps1_assets` (same look as demake). Emulator playable build is **`emulator_play/`** in this repo.

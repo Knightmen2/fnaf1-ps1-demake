@@ -9,6 +9,9 @@ build/
 !tools/*.exe
 *.bin
 *.cue
+# Allow DuckStation package in emulator_play/
+!emulator_play/fnaf1.bin
+!emulator_play/fnaf1.cue
 .ninja_*
 CMakeCache.txt
 CMakeFiles/
